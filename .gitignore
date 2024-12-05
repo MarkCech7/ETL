@@ -166,3 +166,7 @@ Include/
 Lib/
 Scripts/
 pyvenv.cfg
+data/
+covid_data.db
+operations.py
+share/
