@@ -1,8 +1,11 @@
+import sqlite3
+import pandas as pd
 """
 Add a case_fatality_rate feature: deaths / cases * 100.
 Compute rolling averages for smoother trends.
 Derive days_since_first_case as a time-based feature.
 """
+
 def data_transform(data):
 
     #konverzia na datove typy
@@ -31,3 +34,30 @@ def data_transform(data):
     data['days_since_first_case'] = (data.index - first_case_date).days
 
     return data
+
+def select_from_sqlite(dbName):
+
+    conn = sqlite3.connect(dbName)
+
+    query = "SELECT * FROM covid_data"
+    data = pd.read_sql_query(query, conn)
+
+    conn.close()
+
+    return data
+
+def transform_for_json(data):
+    data.columns = [
+        col.lower().replace(' ', '_')
+        for col in data.columns
+    ]
+    
+    """
+    transformed_data = data.groupby('date').apply(
+        lambda group: group.to_dict(orient='records')
+    ).to_dict()
+    """
+
+    transformed_data = data.to_dict(orient='records')
+
+    return transformed_data
