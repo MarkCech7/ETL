@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+
 """
 Add a case_fatality_rate feature: deaths / cases * 100.
 Compute rolling averages for smoother trends.
@@ -7,7 +8,6 @@ Derive days_since_first_case as a time-based feature.
 """
 
 def data_transform(data):
-
     #konverzia na datove typy
     data['cases'] = data['cases'].astype(int)
     data['deaths'] = data['deaths'].astype(int)
@@ -36,7 +36,6 @@ def data_transform(data):
     return data
 
 def select_from_sqlite(dbName):
-
     conn = sqlite3.connect(dbName)
 
     query = "SELECT * FROM covid_data"
@@ -46,7 +45,8 @@ def select_from_sqlite(dbName):
 
     return data
 
-def transform_for_json(data):
+def transform_for_mongo(data):
+    data['date'] = pd.to_datetime(data['date'])    
     data.columns = [
         col.lower().replace(' ', '_')
         for col in data.columns
@@ -59,5 +59,34 @@ def transform_for_json(data):
     """
 
     transformed_data = data.to_dict(orient='records')
-
     return transformed_data
+
+def group_data_by_month(db, collection_name):
+    collection = db[collection_name]
+    pipeline = [
+        {
+            "$group": {
+                "_id": {"$month": "$date"}, 
+                "total_cases": {"$sum": "$cases"},
+                "total_deaths": {"$sum": "$deaths"},
+            }
+        }
+    ]
+    
+    grouped_data = list(collection.aggregate(pipeline))
+    return grouped_data
+
+def group_data_by_week(db, collection_name):
+    collection = db[collection_name]
+    pipeline = [
+        {
+            "$group": {
+                "_id": {"$week": "$date"},
+                "total_cases": {"$sum": "$cases"},
+                "total_deaths": {"$sum": "$deaths"},
+            }
+        }
+    ]
+    
+    grouped_data = list(collection.aggregate(pipeline))
+    return grouped_data
