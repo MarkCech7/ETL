@@ -1,11 +1,9 @@
-from operations import load_sales_data, transform_sales_data, analyze_sales_data
-from covid_operations import data_transform, select_from_sqlite, transform_for_mongo, group_data_by_month, group_data_by_week
+from sql_operations import data_transform, select_from_sqlite, transform_for_mongo
+from mongodb_operations import create_mongodb, insert_into_mongodb, group_data_by_month, group_data_by_week
 import pandas as pd
 import sqlite3
 from pymongo import MongoClient
 import os
-import sys
-import pprint
 import matplotlib.pyplot as plt
 
 sqlDBPath = "C:\Projects\ExtractLoadTransform\covid_data.db"
@@ -14,28 +12,24 @@ covid_data = pd.read_csv(
     'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv',
     index_col=['date'], parse_dates=['date']).asfreq(freq='D')
 
-transformed_data = data_transform(covid_data)
+data_for_sql = data_transform(covid_data)
 
 if not os.path.exists(sqlDBPath):
     conn = sqlite3.connect('covid_data.db')
-    transformed_data.to_sql('covid_data', conn, if_exists='replace')
+    data_for_sql.to_sql('covid_data', conn, if_exists='replace')
     conn.commit()
     cursor = conn.cursor()
     results = cursor.fetchall()
     conn.close()
 
-data = select_from_sqlite(dbName="covid_data.db")
+sql_data = select_from_sqlite(dbName="covid_data.db")
+data_for_mongo = transform_for_mongo(sql_data)
 
-json_compatible_data = transform_for_mongo(data)
+create_mongodb("database", "collection")
+insert_into_mongodb(db="database", data=data_for_mongo, collection_name="collection")
 
-client = MongoClient("localhost", 27017)
-db = client["database"]
-collection = db["collection"]
-collection.drop()
-result = collection.insert_many(json_compatible_data)
-
-grouped_by_month = group_data_by_month(db, "collection")
-grouped_by_week = group_data_by_week(db, "collection")
+grouped_by_month = group_data_by_month("database", "collection")
+grouped_by_week = group_data_by_week("database", "collection")
 
 df = pd.DataFrame(grouped_by_month)
 if "_id" in df.columns:
