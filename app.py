@@ -26,13 +26,13 @@ mongodb_operations.insert_into_mongodb(data=data_for_mongo)
 
 sql_grouped_by_month = sql_operations.group_data_by_month('covid_data')
 sql_grouped_by_week = sql_operations.group_data_by_week('covid_data')
-grouped_by_month = mongodb_operations.group_data_by_month()
-grouped_by_week = mongodb_operations.group_data_by_week()
+mongo_grouped_by_month = mongodb_operations.group_data_by_month()
+mongo_grouped_by_week = mongodb_operations.group_data_by_week()
 
 visualisations_sql = Visualisations(sql_grouped_by_month)
 visualisations_sql.proportion_by_month()
 visualisations_sql.compare_cases_and_deaths()
 
-visualisations_mongo = Visualisations(sql_grouped_by_month)
+visualisations_mongo = Visualisations(mongo_grouped_by_month)
 visualisations_mongo.proportion_by_month()
 visualisations_mongo.compare_cases_and_deaths()
