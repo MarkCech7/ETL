@@ -22,9 +22,10 @@ class Visualisations:
     def dataframe(self, data):
         df = pd.DataFrame(data)
         if "_id" in df.columns:
-            df["month"] = df["_id"]  
-            df.drop(columns=["_id"], inplace=True) 
+            df["month"] = df["_id"] 
+            df.drop(columns=["_id"], inplace=True)
 
+        df['month'] = pd.to_numeric(df['month'], downcast='integer', errors='coerce')
         df = df.sort_values("month")
         return df
 
